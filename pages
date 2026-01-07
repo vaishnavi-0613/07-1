@@ -1,0 +1,222 @@
+import { useState } from "react"
+import { useNavigate, Link } from "react-router-dom"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { useAuth } from "../context/AuthContext"
+
+export default function Login() {
+  const { login } = useAuth()
+  const navigate = useNavigate()
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
+
+  const handleLogin = async () => {
+    try {
+      await login(email, password)
+      navigate("/todos")
+    } catch (err) {
+      setError("Invalid credentials")
+    }
+  }
+
+  return (
+    <div className="flex justify-center items-center h-screen">
+      <Card className="w-96">
+        <CardHeader className="text-xl font-bold">Login</CardHeader>
+        <CardContent className="space-y-3">
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+
+          <Input
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+
+          <Input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+
+          <Button className="w-full" onClick={handleLogin}>
+            Login
+          </Button>
+
+          <p className="text-sm text-center">
+            Don’t have an account?{" "}
+            <Link to="/signup" className="text-blue-500">
+              Sign Up
+            </Link>
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+import { useState } from "react"
+import { useNavigate, Link } from "react-router-dom"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { useAuth } from "../context/AuthContext"
+
+export default function Signup() {
+  const { signup } = useAuth()
+  const navigate = useNavigate()
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
+
+  const handleSignup = async () => {
+    try {
+      await signup(email, password)
+      navigate("/todos")
+    } catch (err) {
+      setError("Account creation failed")
+    }
+  }
+
+  return (
+    <div className="flex justify-center items-center h-screen">
+      <Card className="w-96">
+        <CardHeader className="text-xl font-bold">Sign Up</CardHeader>
+        <CardContent className="space-y-3">
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+
+          <Input
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+
+          <Input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+
+          <Button className="w-full" onClick={handleSignup}>
+            Create Account
+          </Button>
+
+          <p className="text-sm text-center">
+            Already have an account?{" "}
+            <Link to="/login" className="text-blue-500">
+              Login
+            </Link>
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+
+import { useEffect, useState } from "react"
+import Navbar from "../components/Navbar"
+import Sidebar from "../components/Sidebar"
+import TodoItem from "../components/TodoItem"
+import UpdateTodoModal from "../components/UpdateTodoModal"
+import Footer from "../components/Footer"
+import { useAuth } from "../context/AuthContext"
+import * as todoService from "../services/todo.service"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+
+export default function Todos() {
+  const { user } = useAuth()
+
+  const [todos, setTodos] = useState([])
+  const [filter, setFilter] = useState("all")
+  const [selectedTodo, setSelectedTodo] = useState(null)
+  const [newTodo, setNewTodo] = useState("")
+  const [editOpen, setEditOpen] = useState(false)
+  const [editValue, setEditValue] = useState("")
+
+  const loadTodos = async () => {
+    const snapshot = await todoService.getTodos(user.uid)
+    const list = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }))
+    setTodos(list)
+  }
+
+  useEffect(() => {
+    loadTodos()
+  }, [])
+
+  const filteredTodos = todos.filter((todo) => {
+    if (filter === "completed") return todo.completed
+    if (filter === "pending") return !todo.completed
+    return true
+  })
+
+  const addTodo = async () => {
+    if (!newTodo) return
+    await todoService.addTodo(user.uid, {
+      title: newTodo,
+      completed: false,
+    })
+    setNewTodo("")
+    loadTodos()
+  }
+
+  const toggleTodo = async (todo) => {
+    await todoService.updateTodo(user.uid, todo.id, {
+      completed: !todo.completed,
+    })
+    loadTodos()
+  }
+
+  const deleteTodo = async (todo) => {
+    await todoService.deleteTodo(user.uid, todo.id)
+    setSelectedTodo(null)
+    loadTodos()
+  }
+
+  const openEdit = (todo) => {
+    setEditValue(todo.title)
+    setSelectedTodo(todo)
+    setEditOpen(true)
+  }
+
+  const saveEdit = async () => {
+    await todoService.updateTodo(user.uid, selectedTodo.id, {
+      title: editValue,
+    })
+    setEditOpen(false)
+    loadTodos()
+  }
+
+  return (
+    <div className="flex flex-col min-h-screen">
+      <Navbar filter={filter} setFilter={setFilter} />
+
+      <div className="flex flex-1">
+        <Sidebar
+          todos={filteredTodos}
+          selectedId={selectedTodo?.id}
+          onSelect={setSelectedTodo}
+        />
+
+        <main className="flex-1 p-6 space-y-4">
+          <div className="flex gap-2">
+            <Input
+              placeholder="New Todo"
+              value={newTodo}
+              onChange={(e) => setNewTodo(e.target.value)}
+            />
+            <Button onClick={addTodo}>Add</Button>
+          </div>
+
+          {selectedTodo && (
+            <TodoItem
+              todo={s
+
+
+
